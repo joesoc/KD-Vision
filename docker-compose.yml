@@ -1,0 +1,52 @@
+services:
+  superset_postgres:
+    image: postgres:15
+    container_name: superset_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: superset
+      POSTGRES_PASSWORD: superset
+      POSTGRES_DB: superset
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+
+
+  superset_redis:
+    image: redis:latest
+    container_name: superset_redis
+    restart: always
+    ports:
+      - "127.0.0.1:6380:6379"
+
+  superset:
+    image: apache/superset:latest
+    container_name: superset
+    restart: always
+    depends_on:
+      - superset_postgres
+      - superset_redis
+    environment:
+      SUPERSET_SECRET_KEY: 'kdvisionsecret'
+    volumes:
+      - superset_home:/app/superset_home
+    ports:
+      - "127.0.0.1:8088:8088"
+    command: >
+      /bin/bash -c "
+        superset db upgrade &&
+        superset fab create-admin \
+          --username admin \
+          --firstname Superset \
+          --lastname Admin \
+          --email admin@superset.com \
+          --password admin &&
+        superset init &&
+        superset run -h 0.0.0.0 -p 8088 --with-threads --reload --debugger
+      "
+
+volumes:
+  pgdata:
+  superset_home:

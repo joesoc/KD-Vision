@@ -1,0 +1,9 @@
+# Ignore volumes and cache
+__pycache__/
+*.log
+*.pyc
+*.db
+.env
+superset_home/
+pgdata/
+EOF
